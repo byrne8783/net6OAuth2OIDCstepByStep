@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +16,34 @@ builder.Services.AddHttpClient("APIClient", client =>
     client.DefaultRequestHeaders.Clear();
     client.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
 });
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+    })
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
+    {
+        options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.Authority = "https://localhost:5001/"; //
+        options.ClientId = "imagegalleryclient";   //we defined these in our IDP
+        options.ClientSecret = "secret";
+        options.ResponseType = "code";
+        //options.Scope.Add("openid");              //these too, so he must be able too work them out
+        //options.Scope.Add("profile");
+        //options.CallbackPath = new PathString("signin-oidc");
+        // SignedOutCallbackPath: default = host:port/signout-callback-oidc.
+        // Must match with the post logout redirect URI at IDP client config if
+        // you want to automatically return to the application after logging out
+        // of IdentityServer.
+        // To change, set SignedOutCallbackPath
+        // eg: options.SignedOutCallbackPath = new PathString("pathaftersignout");
+        // we're happy with the default
+        options.SaveTokens = true; // tokens will be saved in a cookie
+        options.GetClaimsFromUserInfoEndpoint = true;
+    });
+
 
 var app = builder.Build();
 
@@ -29,6 +59,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
