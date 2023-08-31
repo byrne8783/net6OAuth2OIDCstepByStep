@@ -14,4 +14,8 @@
     <ProjectReference Include="..\ImageGallery.Model\ImageGallery.Model.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Views\Authentication\" />
+  </ItemGroup>
+
 </Project>
