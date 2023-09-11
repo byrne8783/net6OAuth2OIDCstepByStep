@@ -12,15 +12,18 @@ builder.Services.AddControllersWithViews()
         configure.JsonSerializerOptions.PropertyNamingPolicy = null);
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); //clear default claim type mappings
 
+builder.Services.AddAccessTokenManagement();  
+
 // create an HttpClient used for accessing the API
 builder.Services.AddHttpClient("APIClient", client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["ImageGalleryAPIRoot"]);
-    client.DefaultRequestHeaders.Clear();
-    client.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
-});
-builder.Services
-    .AddAuthentication(options =>
+    {
+        client.BaseAddress = new Uri(builder.Configuration["ImageGalleryAPIRoot"]);
+        client.DefaultRequestHeaders.Clear();
+        client.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
+    })
+    .AddUserAccessTokenHandler();  // a handler to add access tokens to each requests
+
+builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
@@ -53,6 +56,7 @@ builder.Services
         options.ClaimActions.DeleteClaim("sid");
         options.ClaimActions.DeleteClaim("idp");
         options.Scope.Add("roles");  // one thats not included by default
+        options.Scope.Add("imagegalleryapi.fullaccess");
         options.ClaimActions.MapJsonKey("role", "role");
         options.TokenValidationParameters = new()
         {
