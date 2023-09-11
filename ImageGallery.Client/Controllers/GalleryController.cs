@@ -189,10 +189,12 @@ namespace ImageGallery.Client.Controllers
             // get the saved identity token.  Comes from a Cookie cause we said .SaveTokens = true in the WebApp Builder here
             var identityToken = await HttpContext
                 .GetTokenAsync(OpenIdConnectParameterNames.IdToken);
-
             // get the saved access token
             var accessToken = await HttpContext
                 .GetTokenAsync(OpenIdConnectParameterNames.AccessToken);
+            // get the refresh token
+            var refreshToken = await HttpContext
+                .GetTokenAsync(OpenIdConnectParameterNames.RefreshToken);
 
             var userClaimsStringBuilder = new StringBuilder();
             foreach (var claim in User.Claims)
@@ -206,6 +208,8 @@ namespace ImageGallery.Client.Controllers
                 $"\n{identityToken} \n{userClaimsStringBuilder}");
             _logger.LogInformation($"Access token: " +
                 $"\n{accessToken}");
+            _logger.LogInformation($"Refresh token: " +
+                $"\n{refreshToken}");
         }
 
 

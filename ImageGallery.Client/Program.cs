@@ -22,7 +22,12 @@ builder.Services.AddHttpClient("APIClient", client =>
         client.DefaultRequestHeaders.Clear();
         client.DefaultRequestHeaders.Add(HeaderNames.Accept, "application/json");
     })
-    .AddUserAccessTokenHandler();  // a handler to add access tokens to each requests
+    .AddUserAccessTokenHandler();  // a handler to add access tokens to each requests.  He'll handle refresh too
+
+builder.Services.AddHttpClient("IDPClient", client =>  // for interaction with the IDP
+{
+    client.BaseAddress = new Uri("https://localhost:5001/");
+});
 
 builder.Services.AddAuthentication(options =>
     {
@@ -61,6 +66,7 @@ builder.Services.AddAuthentication(options =>
         options.Scope.Add("imagegalleryapi.read");
         options.Scope.Add("imagegalleryapi.write");
         options.Scope.Add("country");
+        options.Scope.Add("offline_access");
         options.ClaimActions.MapJsonKey("role", "role");
         options.ClaimActions.MapUniqueJsonKey("country", "country");
         options.TokenValidationParameters = new()

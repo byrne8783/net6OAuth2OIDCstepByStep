@@ -27,6 +27,7 @@ public static class Config
                  Scopes = { "imagegalleryapi.fullaccess",
                      "imagegalleryapi.read",
                      "imagegalleryapi.write"}
+                 ,ApiSecrets = { new Secret("apisecret".Sha256()) }
              }
          };
     public static IEnumerable<ApiScope> ApiScopes =>
@@ -45,6 +46,14 @@ public static class Config
                 ClientName = "Image Gallery"
                 , ClientId = "imagegalleryclient"
                 , AllowedGrantTypes = GrantTypes.Code
+                , AccessTokenType = AccessTokenType.Reference
+                , AllowOfflineAccess = true
+                , UpdateAccessTokenClaimsOnRefresh = true
+                , AccessTokenLifetime = 120 // seconds, and a five minute clock skew time
+                    // AuthorizationCodeLifetime = ...5 minutes default
+                    // IdentityTokenLifetime = ...5 minutes default
+                    // SlidingRefreshTokenLifetime is another thingy with a default
+                    // UpdateAccessTokenClaimsOnRefresh is another thingy
                 , RedirectUris = { "https://localhost:7184/signin-oidc" }
                 , PostLogoutRedirectUris = { "https://localhost:7184/signout-callback-oidc" }
                 , AllowedScopes = { IdentityServerConstants.StandardScopes.OpenId,
