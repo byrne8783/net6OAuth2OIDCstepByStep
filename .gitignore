@@ -350,3 +350,6 @@ MigrationBackup/
 .ionide/
 /ImageGallery.API/ImageGallery.db-shm
 /ImageGallery.API/ImageGallery.db-wal
+/Marvin.IDP/MarvinIdentity.db
+/Marvin.IDP/MarvinIdentity.db-shm
+/Marvin.IDP/MarvinIdentity.db-wal
