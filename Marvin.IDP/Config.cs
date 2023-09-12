@@ -61,7 +61,7 @@ public static class Config
                         ,"imagegalleryapi.read","imagegalleryapi.write"
                         ,"country"}
                 , ClientSecrets = {  new Secret("secret".Sha256()) }
-                , RequireConsent = true
+                //, RequireConsent = true
                 }
             };
 }
