@@ -2,6 +2,7 @@
 using Marvin.IDP.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using System.Security.Cryptography;
 
 namespace Marvin.IDP.Services
@@ -10,6 +11,99 @@ namespace Marvin.IDP.Services
     {
         private readonly IdentityDbContext _context;
         private readonly IPasswordHasher<User> _passwordHasher;
+        public async Task<User> FindUserByExternalProviderAsync(
+            string provider, string providerIdentityKey)
+        {
+            if (string.IsNullOrWhiteSpace(provider))
+            {
+                throw new ArgumentNullException(nameof(provider));
+            }
+
+            if (string.IsNullOrWhiteSpace(providerIdentityKey))
+            {
+                throw new ArgumentNullException(nameof(providerIdentityKey));
+            }
+
+            var userLogin = await _context.UserLogins.Include(ul => ul.User)
+               .FirstOrDefaultAsync(ul => ul.Provider == provider
+               && ul.ProviderIdentityKey == providerIdentityKey);
+
+            return userLogin?.User;
+        }
+        public User AutoProvisionUser(string provider,
+            string providerIdentityKey,
+            IEnumerable<Claim> claims)
+        {
+            if (string.IsNullOrWhiteSpace(provider))
+            {
+                throw new ArgumentNullException(nameof(provider));
+            }
+
+            if (string.IsNullOrWhiteSpace(providerIdentityKey))
+            {
+                throw new ArgumentNullException(nameof(providerIdentityKey));
+            }
+
+            if (claims is null)
+            {
+                throw new ArgumentNullException(nameof(claims));
+            }
+
+            var user = new User()
+            {
+                Active = true,
+                Subject = Guid.NewGuid().ToString()
+            };
+            foreach (var claim in claims)
+            {
+                user.Claims.Add(new UserClaim()
+                {
+                    Type = claim.Type,
+                    Value = claim.Value
+                });
+            }
+            user.Logins.Add(new UserLogin()
+            {
+                Provider = provider,
+                ProviderIdentityKey = providerIdentityKey
+            });
+
+            _context.Users.Add(user);
+            return user;
+        }
+        public async Task<User> GetUserByEmailAsync(string email)
+        {
+            if (email is null)
+            {
+                throw new ArgumentNullException(nameof(email));
+            }
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == email);
+        }
+        public async Task AddExternalProviderToUser(
+           string subject,
+           string provider,
+           string providerIdentityKey)
+        {
+            if (string.IsNullOrWhiteSpace(subject))
+            {
+                throw new ArgumentNullException(nameof(subject));
+            }
+            if (string.IsNullOrWhiteSpace(provider))
+            {
+                throw new ArgumentNullException(nameof(provider));
+            }
+            if (string.IsNullOrWhiteSpace(providerIdentityKey))
+            {
+                throw new ArgumentNullException(nameof(providerIdentityKey));
+            }
+            var user = await GetUserBySubjectAsync(subject);
+            user.Logins.Add(new UserLogin()
+            {
+                Provider = provider,
+                ProviderIdentityKey = providerIdentityKey
+            });
+        }
         public async Task<bool> IsUserActive(string subject)
         {
             if (string.IsNullOrWhiteSpace(subject))
@@ -98,7 +192,7 @@ namespace Marvin.IDP.Services
                 // in a real-life scenario you'll probably want to 
                 // return this as a validation issue
                 throw new Exception("Username must be unique");
-            }			
+            }
             if (_context.Users.Any(u => u.Email == userToAdd.Email))
             {
                 throw new Exception("Email must be unique");
